@@ -14,4 +14,8 @@ class FishbaseTaxonCache$Test extends FlatSpec with Matchers  {
     FishBase.imageNameToUrl("bla.jpg") should be(Some("http://fishbase.org/images/thumbnails/jpg/tn_bla.jpg"))
   }
 
+  "fishbase id" should "be presented in some namespace" in {
+    FishBase.toExternalId("idType", "someId") should be("FB:idType:someId")
+  }
+
 }

@@ -23,7 +23,7 @@ trait DB {
   def idPrefix: String
 
   def idToUrl(id: String): String = {
-    s"http://$host/summary/${id}"
+    s"http://$host/summary/$id"
   }
 
   def imageNameToUrl(picName: String): Option[String] = {
@@ -36,9 +36,9 @@ trait DB {
     }
   }
 
-  def toExternalId(id: String): String = {
+  def toExternalId(idType: String, id: String): String = {
     if (id.length > 0) {
-      s"$idPrefix:$id"
+      s"$idPrefix:$idType:$id"
     } else {
       ""
     }
@@ -92,7 +92,11 @@ object FishbaseTaxonCache extends App {
     val stocks = toStream(db.tables.stocks)
 
     val stocksHeader = stocks.next()
-    val specCodes = stocks.flatMap(line => stocksHeader.zip(line).toMap.filterKeys("SpecCode" == _).values)
+    val specCodeLabel = "SpecCode"
+    val famCodeLabel = "FamCode"
+    val genCodeLabel = "GenCode"
+
+    val specCodes = stocks.flatMap(line => stocksHeader.zip(line).toMap.filterKeys(specCodeLabel == _).values)
     val specCodesDistinct = specCodes.toSeq.distinct.toSet
 
 
@@ -100,15 +104,15 @@ object FishbaseTaxonCache extends App {
     val taxaHeader = taxa.next()
     val taxonMap = taxa.foldLeft(db_agg)((agg, line) => {
       val taxonLine = taxaHeader.zip(line).toMap
-      taxonLine.get("SpecCode") match {
+      taxonLine.get(specCodeLabel) match {
         case Some(specCode) => if (specCodesDistinct.contains(specCode)) {
           val rankNames = List("Class", "Order", "Family", "SubFamily", "Genus", "Species")
-          val aTaxon = Taxon(id = db.toExternalId(specCode),
+          val aTaxon = Taxon(id = db.toExternalId(specCodeLabel, specCode),
             name = List(taxonLine("Genus"), taxonLine("Species")).mkString(" "),
             rank = "Species",
             pathNames = rankNames,
-            pathIds = List(None, None, Some("FamCode"), None, Some("GenCode"), Some("SpecCode")).map {
-              case Some(pathId) => Some(db.toExternalId(taxonLine.getOrElse(pathId, "")))
+            pathIds = List(None, None, Some(famCodeLabel), None, Some(genCodeLabel), Some(specCodeLabel)).map {
+              case Some(pathId) => Some(db.toExternalId(pathId, taxonLine.getOrElse(pathId, "")))
               case None => None
             },
             path = rankNames.map(rankName => {
@@ -136,7 +140,7 @@ object FishbaseTaxonCache extends App {
     val speciesHeader = species.next()
     species.foldLeft(taxonMap)((agg, line) => {
       val speciesLine = speciesHeader.zip(line).toMap
-      (speciesLine.get("SpecCode"), speciesLine.get("PicPreferredName")) match {
+      (speciesLine.get(specCodeLabel), speciesLine.get("PicPreferredName")) match {
         case (Some(specCode), Some(picName)) => {
           agg.get(specCode) match {
             case Some(taxon) => {
