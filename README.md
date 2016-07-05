@@ -23,4 +23,5 @@ The taxon cache should look something like:
 id  name  rank  commonNames path  pathIds pathNames externalUrl thumbnailUrl
 SLB:45717 Porites iwayamaensis  Species   Anthozoa|Scleractinia|Poritidae||Porites|iwayamaensis ||SLB:1463|||SLB:45717  Class|Order|Family|SubFamily|Genus|Species  http://sealifebase.org/summary/45717  
 SLB:93094 Eurysquilla leloeuffi Species   Malacostraca|Stomatopoda|Eurysquillidae||Eurysquilla|leloeuffi  ||SLB:619|||SLB:93094 Class|Order|Family|SubFamily|Genus|Species  http://sealifebase.org/summary/93094  
+...
 ```
